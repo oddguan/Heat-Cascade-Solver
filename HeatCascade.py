@@ -50,11 +50,7 @@ class System():
         Formulate the intervals by using the shifted temperatures of all streams.
 
         Return:
-<<<<<<< HEAD
             temperature_list: a reversely sorted list of temperature intervals.
-=======
-            temperature_list: a sorted list of temperature intervals
->>>>>>> 4ac8a9b16f143dbf5cc2bdb47055a5c9aa34c42f
         """
         for stream in self.stream_list:
             if stream.T_in_shifted not in self.temperature_list:
@@ -62,11 +58,7 @@ class System():
             if stream.T_out_shifted not in self.temperature_list:
                 self.temperature_list.append(stream.T_out_shifted) 
         
-<<<<<<< HEAD
         return sorted(self.temperature_list, reverse=True)
-=======
-        return sorted(self.temperature_list)
->>>>>>> 4ac8a9b16f143dbf5cc2bdb47055a5c9aa34c42f
 
 def main():
     one = Stream(20, 135, 2)
