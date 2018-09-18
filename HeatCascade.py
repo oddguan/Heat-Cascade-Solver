@@ -51,7 +51,7 @@ class System():
         """
         Formulate the intervals by using the shifted temperatures of all streams.
 
-        Return:
+        Returns:
             temperature_list: a reversely sorted list of temperature intervals.
         """
         for stream in self.stream_list:
@@ -71,7 +71,7 @@ def formCpList(temperature_list, stream_list):
         temeperature_list: a list that stores the temperature intervals of the system.
         stream_list: a list that stores the Stream objects of the system.
 
-    Return:
+    Returns:
         Cp_list: a numpy array that stores Cp values in descending temperature order.
     """
     Cp_list = np.zeros(len(temperature_list)-1)
@@ -97,7 +97,7 @@ def calculateDeltaH(Cp_list, temperature_list):
         Cp_list: A numpy array that stores the Cp for each temperature interval.
         temperature_list: A list that stores the temperature intervals of the system.
 
-    Return:
+    Returns:
         deltaH_list: A list that stores the enthalpy values for the heat cascade.
     """
     deltaH_list = list()
@@ -114,8 +114,9 @@ def identifyPinch(deltaH_list):
     Args:
         deltaH_list: a list that stores delta H values in order.
 
-    Return:
-        low: what is the lowest infeasible power reached during the cascade process.
+    Returns:
+        (low, index): what is the lowest infeasible power reached during the cascade process.
+                    and what is the index of the pinch temeperature in the list.
     """
     _sum = 0
     low = 0
@@ -127,17 +128,77 @@ def identifyPinch(deltaH_list):
             index = i
     return (low, index)
 
+def calculateHeatExchanger(stream_list, pinch, T_min=10):
+    """
+    A function that calculates the power of heat exchangers, positions of coolers and
+    heaters.
+
+    Args:
+        stream_list: A list of stream objects for the system.
+        pinch: The pinch temperature of the system.
+        T_min: delta T_min for the system, default to 10.
+    """
+    cold_streams = list()
+    hot_streams = list()
+    for stream in stream_list:
+        if stream.type == 'hot':
+            stream.current_temperature = stream.T_in
+            hot_streams.append(stream)
+        else:
+            if stream.T_out > pinch - T_min/2:
+                stream.current_temperature = pinch - T_min/2
+            else:
+                stream.current_temperature = stream.T_out
+            cold_streams.append(stream)
+
+    # above the pinch
+    heaters = list()
+    for hot in hot_streams:
+        energy_released = (hot.T_in - pinch - T_min/2) * hot.Cp
+        for cold in cold_streams:
+            # Avoid cross temperature, assert Cp_cold>=Cp_hot
+            if (cold.Cp >= hot.Cp) and \
+             (cold.T_out >= pinch - T_min/2):
+                energy_required = (cold.T_out - cold.current_temperature) * cold.Cp
+                energy_heated = energy_released
+                energy_released -= energy_required
+                if energy_released > 0: # If excess released from the heat stream
+                    continue
+                elif energy_released == 0:
+                    break
+                else:
+                    cold.current_temperature += energy_heated / cold.Cp
+    for cold in cold_streams:
+        if cold.current_temperature != cold.T_out and cold.current_temperature >= pinch - T_min/2:
+            heater_info = [stream_list.index(cold)+1, (cold.T_out-cold.current_temperature)*cold.Cp]
+            heaters.append(heater_info)
+
+    # below the pinch, WIP
+    coolers = list()
+
+    return(heaters, coolers)
+
+
 
 def main():
     # Creating stream objects and system object
+    # 1. Table 2.2 from textbook p20
+    # one = Stream(20, 135, 2)
+    # two = Stream(170, 60, 3)
+    # three = Stream(80, 140, 4)
+    # four = Stream(150, 30, 1.5)
+
+    #2. Problem#2 from Homework#1
     one = Stream(60, 180, 3)
     two = Stream(180, 40, 2)
     three = Stream(30, 105, 2.6)
     four = Stream(150, 40, 4)
+
     streams = [one, two, three, four]
     for s in streams:
         s.shiftTemperature()
     sys = System(streams)
+
 
     # Main calculations
     temp_list = sys.formulateIntervals()
@@ -152,11 +213,14 @@ def main():
     coldUtility = sum(deltaH_list)
     print("Heat dumps into the cold utility before adding pinch power: " + str(coldUtility) + "KW")
     low, index = identifyPinch(deltaH_list)
-    print("The pinch occurs at interval #"+str(index+1)+", which is from ",\
-    str(temp_list[index+1]) + "C to ",str(temp_list[index]) + "C")
+    pinch = temp_list[index+1]
+    print("The pinch occurs at " + str(pinch)+" C")
     print("The pinch:", -low, "KW")
-    print("Heat dumps after adding pinch power:", coldUtility-low, "KW")
+    print("Heat dumps below the pinch:", coldUtility-low, "KW")
 
+    # generate heat exchange network
+    heaters, coolers = calculateHeatExchanger(streams, pinch)
+    print(heaters)
 
 if __name__ == '__main__':
     main()
