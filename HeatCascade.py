@@ -189,10 +189,10 @@ def main():
     # four = Stream(150, 30, 1.5)
 
     #2. Problem#2 from Homework#1
-    one = Stream(60, 180, 3)
-    two = Stream(180, 40, 2)
-    three = Stream(30, 105, 2.6)
-    four = Stream(150, 40, 4)
+    one = Stream(20, 140, 2, T_min=20)
+    two = Stream(200, 80, 3, T_min=20)
+    three = Stream(60, 140, 4, T_min=20)
+    four = Stream(160, 30, 1.5, T_min=20)
 
     streams = [one, two, three, four]
     for s in streams:
@@ -207,7 +207,7 @@ def main():
         delta_T = temp_list[i] - temp_list[i+1]
 
     Cp_list = formCpList(temp_list, streams)
-    # print("Cp values: " + str(Cp_list))
+    print("Cp values: " + str(Cp_list))
     deltaH_list = calculateDeltaH(Cp_list, temp_list)
     print("Heat cascade values: " + str(deltaH_list))
     coldUtility = sum(deltaH_list)
@@ -220,7 +220,7 @@ def main():
 
     # generate heat exchange network
     heaters, coolers = calculateHeatExchanger(streams, pinch)
-    print(heaters)
+    # print(heaters)
 
 if __name__ == '__main__':
     main()
