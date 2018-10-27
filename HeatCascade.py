@@ -189,10 +189,10 @@ def main():
     # four = Stream(150, 30, 1.5)
 
     #2. Problem#2 from Homework#1
-    one = Stream(20, 140, 2, T_min=20)
-    two = Stream(200, 80, 3, T_min=20)
-    three = Stream(60, 140, 4, T_min=20)
-    four = Stream(160, 30, 1.5, T_min=20)
+    one = Stream(40, 160, 1.5, T_min=32)
+    two = Stream(120, 40, 1, T_min=32)
+    three = Stream(20, 100, 1.3, T_min=32)
+    four = Stream(140, 30, 5, T_min=32)
 
     streams = [one, two, three, four]
     for s in streams:
@@ -215,8 +215,8 @@ def main():
     low, index = identifyPinch(deltaH_list)
     pinch = temp_list[index+1]
     print("The pinch occurs at " + str(pinch)+" C")
-    print("The pinch:", -low, "KW")
-    print("Heat dumps below the pinch:", coldUtility-low, "KW")
+    print("QH_min:", -low, "KW")
+    print("QC_min:", coldUtility-low, "KW")
 
     # generate heat exchange network
     heaters, coolers = calculateHeatExchanger(streams, pinch)
